@@ -28,6 +28,21 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
+import org.json.JSONException;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
+
 public class TerminalFragment extends Fragment implements ServiceConnection, SerialListener {
 
     private enum Connected { False, Pending, True }
@@ -44,6 +59,8 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
     private boolean hexEnabled = false;
     private boolean pendingNewline = false;
     private String newline = TextUtil.newline_crlf;
+
+    private byte[] bla = new byte[0];
 
     /*
      * Lifecycle
@@ -242,6 +259,56 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         }
     }
 
+    private void constructBla(byte[] data) {
+        String msg = new String(data);
+
+        if (bla.length == 0) {
+            bla = data;
+        } else {
+            byte[] old = bla;
+            bla = concatByteArray(old, data);
+        }
+
+        if (msg.contains("]")) {
+            sendToApi(bla);
+            bla = new byte[0];
+        }
+    }
+
+    private byte[] concatByteArray(byte[] old, byte[] newer) {
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream( );
+        try {
+            outputStream.write(old);
+            outputStream.write(newer);
+        } catch (IOException e) {
+            Toast.makeText(getActivity(), "sad", Toast.LENGTH_SHORT).show();
+            e.printStackTrace();
+        }
+        return outputStream.toByteArray();
+    }
+
+    private void sendToApi(byte[] data) {
+        String msg = new String(data);
+
+        OkHttpClient client = new OkHttpClient();
+        Request request = new Request.Builder()
+                .url("https://93wahw10t5.execute-api.us-east-2.amazonaws.com/")
+                .put(RequestBody.create(MediaType.parse("text/json; charset=utf-8"), msg))
+                .build();
+
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(@NonNull Call call, @NonNull IOException e) {
+                return;
+            }
+
+            @Override
+            public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
+                return;
+            }
+        });
+    }
+
     private void status(String str) {
         SpannableStringBuilder spn = new SpannableStringBuilder(str + '\n');
         spn.setSpan(new ForegroundColorSpan(getResources().getColor(R.color.colorStatusText)), 0, spn.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
@@ -266,6 +333,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
     @Override
     public void onSerialRead(byte[] data) {
         receive(data);
+        constructBla(data);
     }
 
     @Override
