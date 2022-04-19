@@ -28,12 +28,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
-import org.json.JSONException;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -304,6 +300,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
 
             @Override
             public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
+                service.write("ack".getBytes());
                 return;
             }
         });
