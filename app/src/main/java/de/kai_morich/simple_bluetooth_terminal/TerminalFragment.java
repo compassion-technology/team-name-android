@@ -15,6 +15,7 @@ import android.text.Spannable;
 import android.text.SpannableStringBuilder;
 import android.text.method.ScrollingMovementMethod;
 import android.text.style.ForegroundColorSpan;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -292,16 +293,17 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
                 .put(RequestBody.create(MediaType.parse("text/json; charset=utf-8"), msg))
                 .build();
 
+        Log.i("api", "making api call");
         client.newCall(request).enqueue(new Callback() {
             @Override
             public void onFailure(@NonNull Call call, @NonNull IOException e) {
-                return;
+                Log.e("api-error", e.getMessage());
             }
 
             @Override
             public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
                 service.write("ack".getBytes());
-                return;
+                Log.i("api-success", response.toString());
             }
         });
     }
