@@ -31,6 +31,7 @@ import androidx.fragment.app.Fragment;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -287,7 +288,12 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
     private void sendToApi(byte[] data) {
         String msg = new String(data);
 
-        OkHttpClient client = new OkHttpClient();
+        OkHttpClient client = new OkHttpClient.Builder()
+                .connectTimeout(60, TimeUnit.SECONDS)
+                .writeTimeout(60, TimeUnit.SECONDS)
+                .readTimeout(60, TimeUnit.SECONDS)
+                .build();
+
         Request request = new Request.Builder()
                 .url("https://93wahw10t5.execute-api.us-east-2.amazonaws.com/")
                 .put(RequestBody.create(MediaType.parse("text/json; charset=utf-8"), msg))
