@@ -28,6 +28,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentActivity;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -300,16 +301,37 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
                 .build();
 
         Log.i("api", "making api call");
+        receiveText.append("api: " + "making api call" + "\n \n");
+        receiveText.append("msg: " + msg + "\n \n");
         client.newCall(request).enqueue(new Callback() {
             @Override
             public void onFailure(@NonNull Call call, @NonNull IOException e) {
-                Log.e("api-error", e.getMessage());
+                String errorMessage = e.getMessage();
+                Log.e("api-error", errorMessage);
+
+                FragmentActivity activity = getActivity();
+                activity.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        receiveText.append("api-error: " + errorMessage + "\n \n");
+                    }
+                });
             }
 
             @Override
             public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
+                String responseAsString = response.toString();
+                Log.i("api-success", responseAsString);
+
                 service.write("ack".getBytes());
-                Log.i("api-success", response.toString());
+
+                FragmentActivity activity = getActivity();
+                activity.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        receiveText.append("api-success: " + responseAsString + "\n \n");
+                    }
+                });
             }
         });
     }
@@ -337,7 +359,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
 
     @Override
     public void onSerialRead(byte[] data) {
-        receive(data);
+//        receive(data);
         constructBla(data);
     }
 
